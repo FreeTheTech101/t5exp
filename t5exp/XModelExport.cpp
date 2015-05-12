@@ -302,10 +302,10 @@ void Write(XModel* Asset)
 		dest->boneInfo = (XBoneInfo *)-1;
 	}
 
-	if (Asset->streamInfo.highMipBounds)
+	if (Asset->himipInvSqRadii)
 	{
-		Buffer->Write(Asset->streamInfo.highMipBounds, sizeof(float), 4 * Asset->numsurfs);
-		dest->streamInfo.highMipBounds = (XModelHighMipBounds *)-1;
+		Buffer->Write(Asset->himipInvSqRadii, 16, Asset->numsurfs);
+		dest->himipInvSqRadii = (float *)-1;
 	}
 
 	if (Asset->physPreset)

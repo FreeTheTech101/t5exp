@@ -562,7 +562,13 @@ struct XModel
 	float maxs[3];
 	__int16 numLods;
 	__int16 collLod;
-	XModelStreamInfo streamInfo;
+	
+	union
+	{
+		XModelStreamInfo streamInfo;
+		float* himipInvSqRadii;
+	};
+
 	int memUsage;
 	int flags;
 	bool bad;
