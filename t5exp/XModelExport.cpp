@@ -37,9 +37,9 @@ void Write_TextureMaps(Material* material, FILE* fp, const char* map)
 void Material_Export(Material* material)
 {
 	_mkdir("raw");
-	_mkdir("raw/material");
-	_mkdir("raw/material/mc"); // We'll most likely need that directory
-	std::string _name = "raw/material/";
+	_mkdir("raw/materials");
+	_mkdir("raw/materials/mc"); // We'll most likely need that directory
+	std::string _name = "raw/materials/";
 	_name += material->info.name;
 	_name += ".txt";
 
