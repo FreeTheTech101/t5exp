@@ -5,7 +5,7 @@ void XModelExport(const char* name);
 void DumpStuff()
 {
 	XModelExport("t5_weapon_ak74u_viewmodel");
-	XModelExport("t5_weapon_galil_viewmodel");
+	//XModelExport("t5_weapon_galil_viewmodel");
 }
 
 void RunStuff()

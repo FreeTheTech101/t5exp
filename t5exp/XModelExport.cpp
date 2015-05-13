@@ -2,6 +2,66 @@
 
 Stream* Buffer = 0;
 
+void fwritestr(FILE* file, const char* str)
+{
+	while (*str)
+	{
+		fwrite(str, 1, 1, file);
+
+		str++;
+	}
+
+	// Not needed here
+	//fwrite(str, 1, 1, file);
+}
+
+void Write_TextureMaps(Material* material, FILE* fp, const char* map)
+{
+	char first = *map;
+	char last = map[strlen(map) - 1];
+
+	int count = -1;
+	for (char i = 0; i < material->textureCount; i++)
+	{
+		if (material->textureTable[i].nameStart == first && material->textureTable[i].nameEnd == last)
+		{
+			count++;
+			fwritestr(fp, map);
+			fwritestr(fp, " ");
+			fwritestr(fp, material->textureTable[i].u.image->name);
+			fwritestr(fp, "\n");
+		}
+	}
+}
+
+void Material_Export(Material* material)
+{
+	_mkdir("raw");
+	_mkdir("raw/material");
+	_mkdir("raw/material/mc"); // We'll most likely need that directory
+	std::string _name = "raw/material/";
+	_name += material->info.name;
+	_name += ".txt";
+
+	FILE* fp = fopen(_name.c_str(), "wb");
+
+	if (fp)
+	{
+		fwritestr(fp, "baseMat mc/mtl_t6_wpn_smg_peacekeeper\n"); // Use peacekeeper as base material for now
+
+		Write_TextureMaps(material, fp, "colorMap");
+		Write_TextureMaps(material, fp, "normalMap");
+		Write_TextureMaps(material, fp, "specularMap");
+		Write_TextureMaps(material, fp, "detailMap");
+
+		Com_Printf(0, "File '%s' written\n", _name.c_str());
+	}
+	else
+	{
+		Com_Printf(0, "Unable to write file '%s'\n", _name.c_str());
+	}
+}
+
 // Stuff copied from T6, might be missing some data, but who cares :P
 
 void Write_XSurfaceVertexInfo(XSurfaceVertexInfo* vertInfo, XSurfaceVertexInfo* destVertInfo)
@@ -268,6 +328,7 @@ void Write(XModel* Asset)
 
 		for (char i = 0; i < Asset->numsurfs; i++)
 		{
+			Material_Export(Asset->materialHandles[i]);
 			Buffer->WriteString(Asset->materialHandles[i]->info.name);
 		}
 
@@ -309,6 +370,7 @@ void Write(XModel* Asset)
 	}
 }
 
+
 void XModelExport(const char* name)
 {
 	XModel* model = (XModel*)DB_FindXAssetHeader(ASSET_TYPE_XMODEL, name, true, -1);
@@ -321,13 +383,15 @@ void XModelExport(const char* name)
 		Write(model);
 
 		_mkdir("raw");
-		std::string _name = "raw/";
+		_mkdir("raw/xmodel");
+		std::string _name = "raw/xmodel/";
 		_name += name;
 
 		FILE* fp = fopen(_name.c_str(), "wb");
 
 		if (fp)
 		{
+			fwrite("RXME", 4, 1, fp); // Magic: Redacted XModel Export.
 			fwrite(_Buffer.Data(), _Buffer.Size(), 1, fp);
 			fclose(fp);
 			Com_Printf(0, "File '%s' written\n", _name.c_str());
