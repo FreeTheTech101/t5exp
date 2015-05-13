@@ -1,5 +1,7 @@
 #include <d3d9.h>
 
+typedef float vec3_t[3];
+
 struct DObjAnimMat
 {
 	float quat[4];
@@ -562,7 +564,7 @@ struct XModel
 	float maxs[3];
 	__int16 numLods;
 	__int16 collLod;
-	
+
 	union
 	{
 		XModelStreamInfo streamInfo;
@@ -634,3 +636,23 @@ struct XZoneInfo
 	int allocFlags;
 	int freeFlags;
 };
+
+
+enum scriptInstance_t
+{
+	SCRIPTINSTANCE_SERVER = 0x0,
+	SCRIPTINSTANCE_CLIENT = 0x1,
+	SCRIPT_INSTANCE_MAX = 0x2,
+};
+
+typedef void(__cdecl * Com_Printf_t)(int channel, const char *fmt, ...);
+extern Com_Printf_t Com_Printf;
+
+typedef void *(__cdecl * DB_FindXAssetHeader_t)(XAssetType type, const char *name, bool errorIfMissing, int waitTime);
+extern DB_FindXAssetHeader_t DB_FindXAssetHeader;
+
+typedef void(__cdecl * DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
+extern DB_LoadXAssets_t DB_LoadXAssets;
+
+typedef const char *(__cdecl * SL_ConvertToString_t)(unsigned int stringValue, scriptInstance_t inst);
+extern SL_ConvertToString_t SL_ConvertToString;

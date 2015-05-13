@@ -1,20 +1,4 @@
 #include "stdinc.h"
-#include <direct.h>
-
-typedef float vec3_t[3];
-
-enum scriptInstance_t
-{
-	SCRIPTINSTANCE_SERVER = 0x0,
-	SCRIPTINSTANCE_CLIENT = 0x1,
-	SCRIPT_INSTANCE_MAX = 0x2,
-};
-
-typedef void *(__cdecl * DB_FindXAssetHeader_t)(XAssetType type, const char *name, bool errorIfMissing, int waitTime);
-DB_FindXAssetHeader_t DB_FindXAssetHeader = (DB_FindXAssetHeader_t)0x493A60;
-
-typedef const char *(__cdecl * SL_ConvertToString_t)(unsigned int stringValue, scriptInstance_t inst);
-SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x624C70;
 
 Stream* Buffer = 0;
 
@@ -346,6 +330,11 @@ void XModelExport(const char* name)
 		{
 			fwrite(_Buffer.Data(), _Buffer.Size(), 1, fp);
 			fclose(fp);
+			Com_Printf(0, "File '%s' written\n", _name.c_str());
+		}
+		else
+		{
+			Com_Printf(0, "Unable to write file '%s'\n", _name.c_str());
 		}
 	}
 }

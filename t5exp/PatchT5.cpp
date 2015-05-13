@@ -1,13 +1,11 @@
 #include "stdinc.h"
 
-typedef void(__cdecl * DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
-DB_LoadXAssets_t DB_LoadXAssets = (DB_LoadXAssets_t)0x4359A0;
-
 void XModelExport(const char* name);
 
 void DumpStuff()
 {
 	XModelExport("t5_weapon_ak74u_viewmodel");
+	XModelExport("t5_weapon_galil_viewmodel");
 }
 
 void RunStuff()
@@ -36,13 +34,14 @@ void Sys_RunInit()
 	// Custom command line
 	*(char**)0x403683 = "+set dedicated 1";
 
-	//nop(0x456E03, 5);
-	*(BYTE*)0x46EA60 = 0xC3;
-
 	// Hook random frame function. FastFiles will all be loaded then.
 	call(0x86C785, RunStuff, PATCH_CALL);
 
 	// Don't initialize network stuff
+	*(BYTE*)0x46EA60 = 0xC3;
+
+	// Ignore dedi authentication
 	nop(0x4ED3E8, 5);
+	*(BYTE*)0x5AFD60 = 0xC3;
 	*(BYTE*)0x5D4500 = 0xC3;
 }

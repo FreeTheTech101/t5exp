@@ -33,6 +33,9 @@
     <ClCompile Include="Stream.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="T5.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdinc.h">
@@ -41,10 +44,10 @@
     <ClInclude Include="Hooking.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="XModel.h">
+    <ClInclude Include="Stream.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Stream.h">
+    <ClInclude Include="T5.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
