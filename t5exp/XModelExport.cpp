@@ -15,6 +15,22 @@ void fwritestr(FILE* file, const char* str)
 	//fwrite(str, 1, 1, file);
 }
 
+// T5 has alpha channel as byte 0 and T6 as byte 3 (in non-dxt formats), might have to do a conversion one day :D
+char Image_GetFormat(char format)
+{
+	switch (format)
+	{
+	case 0xC: //DXT3
+		return 0xD;
+
+	case 0xD: //DXT5
+		return 0xE;
+
+	default:
+		return format;
+	}
+}
+
 void Image_Export(GfxImage* image)
 {
 	_mkdir("raw");
@@ -51,6 +67,7 @@ void Image_Export(GfxImage* image)
 				}
 			}
 
+			newHeader.format = Image_GetFormat(header->format);
 			newHeader.version = 27;
 
 			fwrite(&newHeader, sizeof(GfxImageFileHeader_T6), 1, fp);
@@ -129,6 +146,105 @@ void Material_Export(Material* material)
 	}
 }
 
+// Credit to NTAuthority. 
+// I personally am too dumb to actually perform the texture coordinate conversion on my own.
+// My modeling knowledge is probably not enough.
+// *best* function
+DWORD __declspec(naked) Vec2PackTexCoords(float* coords)
+{
+	__asm
+	{
+		push    ebp
+		mov     ebp, esp
+		push    ebx
+		sub     esp, 10h
+		mov     eax, [ebp+8]
+		mov     ebx, [eax+4]
+		mov     eax, [eax]
+		mov     [ebp-8], eax
+		mov     eax, [ebp-8]
+		mov     edx, eax
+		sar     edx, 10h
+		and     edx, 0C000h
+		lea     eax, [eax+eax-80000000h]
+		sar     eax, 0Eh
+		cmp     eax, 3FFEh
+		jle     loc_1CEA97
+
+		mov     eax, 3FFFh
+
+loc_1CEA5E:
+		mov     ecx, edx
+		or      ecx, eax
+		mov     [ebp-8], ebx
+		mov     eax, [ebp-8]
+		mov     edx, eax
+		sar     edx, 10h
+		and     edx, 0C000h
+		lea     eax, [eax+eax-80000000h]
+		sar     eax, 0Eh
+		cmp     eax, 3FFEh
+		jle     loc_1CEAA2
+
+		mov     eax, 3FFFh
+
+loc_1CEA89:
+		or      edx, eax
+		shl     ecx, 10h
+		lea     eax, [edx+ecx]
+		add     esp, 10h
+		pop     ebx
+		pop     ebp
+		retn
+
+
+loc_1CEA97:
+		cmp     eax, 0FFFFC000h
+		jg      loc_1CEAB9
+
+		xor     eax, eax
+		jmp     loc_1CEA5E
+
+loc_1CEAB9:
+		and     eax, 3FFFh
+		jmp     loc_1CEA5E
+
+loc_1CEAA2:
+		cmp     eax, 0FFFFC000h
+		jg      loc_1CEAC0
+
+		xor     eax, eax
+		or      edx, eax
+		shl     ecx, 10h
+		lea     eax, [edx+ecx]
+		add     esp, 10h
+		pop     ebx
+		pop     ebp
+		retn
+
+loc_1CEAC0:
+		and     eax, 3FFFh
+		jmp     loc_1CEA89
+
+	}
+}
+
+void XME_DumpOBJ(GfxPackedVertex* vertices, unsigned short vertCount)
+{
+	for (unsigned short i = 0; i < vertCount; i++)
+	{
+		s10e5 x, y;
+		x.setBits(vertices[i].texCoord.texX);
+		y.setBits(vertices[i].texCoord.texY);
+
+		float v[2];
+		v[0] = (float)x;
+		v[1] = (float)y;
+
+		vertices[i].texCoord.packed = Vec2PackTexCoords(v);
+	}
+}
+
 // Stuff copied from T6, might be missing some data, but who cares :P
 
 void Write_XSurfaceVertexInfo(XSurfaceVertexInfo* vertInfo, XSurfaceVertexInfo* destVertInfo)
@@ -196,8 +312,12 @@ void Write_XSurfaceArray(XSurface* surfs, char numsurfs)
 
 		if (!(surf->flags & 1) && surf->verts0)
 		{
+			GfxPackedVertex* destVerts0 = (GfxPackedVertex*)Buffer->At();
 			Buffer->Write(surf->verts0, sizeof(GfxPackedVertex), surf->vertCount);
 			destSurf->verts0 = (GfxPackedVertex *)-1;
+
+			// Apply correct texture coordinates for T6
+			XME_DumpOBJ(destVerts0, surf->vertCount);
 		}
 
 		// DirectX buffers are handled by the game.

@@ -50,5 +50,8 @@
     <ClInclude Include="T5.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="s10e5.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
