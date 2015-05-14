@@ -87,7 +87,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Hooking.h" />
-    <ClInclude Include="s10e5.h" />
     <ClInclude Include="stdinc.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="T5.h" />

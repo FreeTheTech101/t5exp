@@ -25,11 +25,6 @@ union GfxColor
 union PackedTexCoords
 {
 	unsigned int packed;
-	struct
-	{
-		unsigned short texX;
-		unsigned short texY;
-	};
 };
 
 union PackedUnitVec
