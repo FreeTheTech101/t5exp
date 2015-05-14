@@ -340,6 +340,29 @@ struct GfxStateBits
 	unsigned int loadBits[2];
 };
 
+struct GfxImageFileHeader
+{
+	char tag[3];
+	char version;
+	char format;
+	char flags;
+	__int16 dimensions[3];
+	float gamma;
+	int fileSizeForPicmip[8];
+};
+
+struct GfxImageFileHeader_T6
+{
+	char tag[3];
+	char version;
+	char format;
+	char flags;
+	__int16 dimensions[3];
+	float gamma;
+	char maxGlossForMip[16];
+	int fileSizeForPicmip[8];
+};
+
 struct Material
 {
 	MaterialInfo info;
@@ -654,5 +677,14 @@ extern DB_FindXAssetHeader_t DB_FindXAssetHeader;
 typedef void(__cdecl * DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
 extern DB_LoadXAssets_t DB_LoadXAssets;
 
+typedef int(__cdecl * FS_ReadFile_t)(const char *qpath, void **buffer);
+extern FS_ReadFile_t FS_ReadFile;
+
+typedef void(__cdecl * FS_FreeFile_t)(void *buffer);
+extern FS_FreeFile_t FS_FreeFile;
+
 typedef const char *(__cdecl * SL_ConvertToString_t)(unsigned int stringValue, scriptInstance_t inst);
 extern SL_ConvertToString_t SL_ConvertToString;
+
+unsigned int R_HashString(const char* string);
+const char *va(const char *fmt, ...);

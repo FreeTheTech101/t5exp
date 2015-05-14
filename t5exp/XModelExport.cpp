@@ -15,6 +15,63 @@ void fwritestr(FILE* file, const char* str)
 	//fwrite(str, 1, 1, file);
 }
 
+void Image_Export(GfxImage* image)
+{
+	_mkdir("raw");
+	_mkdir("raw/images");
+
+	std::string _name = "images/";
+	_name += image->name;
+	_name += ".iwi";
+
+	char* buffer;
+	int size = FS_ReadFile(_name.c_str(), (void**)&buffer);
+
+	if (size)
+	{
+		_name = "raw/" + _name;
+		FILE* fp = fopen(_name.c_str(), "wb");
+
+		if (fp)
+		{
+			GfxImageFileHeader_T6 newHeader = { 0 };
+			GfxImageFileHeader* header = (GfxImageFileHeader*)buffer;
+			memcpy(&newHeader, header, 16);
+			memcpy(newHeader.fileSizeForPicmip, header->fileSizeForPicmip, sizeof(newHeader.fileSizeForPicmip));
+
+			// Fix sizes
+			for (int i = 0; i < 8; i++)
+			{
+				int* size = &newHeader.fileSizeForPicmip[i];
+
+				if (*size)
+				{
+					*size -= sizeof(GfxImageFileHeader);
+					*size += sizeof(GfxImageFileHeader_T6);
+				}
+			}
+
+			newHeader.version = 27;
+
+			fwrite(&newHeader, sizeof(GfxImageFileHeader_T6), 1, fp);
+			fwrite(buffer + sizeof(GfxImageFileHeader), size - sizeof(GfxImageFileHeader), 1, fp);
+
+			fclose(fp);
+			Com_Printf(0, "File '%s' written\n", _name.c_str());
+		}
+		else
+		{
+			Com_Printf(0, "Unable to write file '%s'\n", _name.c_str());
+		}
+
+		FS_FreeFile(buffer);
+	}
+	else
+	{
+		Com_Printf(0, "Unable to read file '%s'\n", _name.c_str());
+	}
+}
+
 void Write_TextureMaps(Material* material, FILE* fp, const char* map)
 {
 	char first = *map;
@@ -23,10 +80,12 @@ void Write_TextureMaps(Material* material, FILE* fp, const char* map)
 	int count = -1;
 	for (char i = 0; i < material->textureCount; i++)
 	{
-		if (material->textureTable[i].nameStart == first && material->textureTable[i].nameEnd == last)
+		if (material->textureTable[i].nameStart == first && R_HashString(map) == material->textureTable[i].nameHash)
 		{
 			count++;
 			fwritestr(fp, map);
+			fwritestr(fp, " ");
+			fwritestr(fp, va("%d", count));
 			fwritestr(fp, " ");
 			fwritestr(fp, material->textureTable[i].u.image->name);
 			fwritestr(fp, "\n");
@@ -53,8 +112,16 @@ void Material_Export(Material* material)
 		Write_TextureMaps(material, fp, "normalMap");
 		Write_TextureMaps(material, fp, "specularMap");
 		Write_TextureMaps(material, fp, "detailMap");
+		Write_TextureMaps(material, fp, "colorTint");
+
+		fclose(fp);
 
 		Com_Printf(0, "File '%s' written\n", _name.c_str());
+
+		for (int i = 0; i < material->textureCount; i++)
+		{
+			Image_Export(material->textureTable[i].u.image);
+		}
 	}
 	else
 	{
