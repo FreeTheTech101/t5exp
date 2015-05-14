@@ -15,22 +15,6 @@ void fwritestr(FILE* file, const char* str)
 	//fwrite(str, 1, 1, file);
 }
 
-// T5 has alpha channel as byte 0 and T6 as byte 3 (in non-dxt formats), might have to do a conversion one day :D
-char Image_GetFormat(char format)
-{
-	switch (format)
-	{
-	case 0xC: //DXT3
-		return 0xD;
-
-	case 0xD: //DXT5
-		return 0xE;
-
-	default:
-		return format;
-	}
-}
-
 void Image_Export(GfxImage* image)
 {
 	_mkdir("raw");
@@ -67,7 +51,6 @@ void Image_Export(GfxImage* image)
 				}
 			}
 
-			newHeader.format = Image_GetFormat(header->format);
 			newHeader.version = 27;
 
 			fwrite(&newHeader, sizeof(GfxImageFileHeader_T6), 1, fp);
@@ -89,24 +72,16 @@ void Image_Export(GfxImage* image)
 	}
 }
 
-void Write_TextureMaps(Material* material, FILE* fp, const char* map)
+void Write_TextureMaps(Material* material, FILE* fp)
 {
-	char first = *map;
-	char last = map[strlen(map) - 1];
-
-	int count = -1;
 	for (char i = 0; i < material->textureCount; i++)
 	{
-		if (material->textureTable[i].nameStart == first && R_HashString(map) == material->textureTable[i].nameHash)
-		{
-			count++;
-			fwritestr(fp, map);
-			fwritestr(fp, " ");
-			fwritestr(fp, va("%d", count));
-			fwritestr(fp, " ");
-			fwritestr(fp, material->textureTable[i].u.image->name);
-			fwritestr(fp, "\n");
-		}
+		fwritestr(fp, va("%c%c", material->textureTable[i].nameStart, material->textureTable[i].nameEnd));
+		fwritestr(fp, " ");
+		fwritestr(fp, va("%u", material->textureTable[i].nameHash));
+		fwritestr(fp, " ");
+		fwritestr(fp, material->textureTable[i].u.image->name);
+		fwritestr(fp, "\n");
 	}
 }
 
@@ -117,7 +92,7 @@ void Material_Export(Material* material)
 	_mkdir("raw/materials/mc"); // We'll most likely need that directory
 	std::string _name = "raw/materials/";
 	_name += material->info.name;
-	_name += ".txt";
+	_name += ".rme";
 
 	FILE* fp = fopen(_name.c_str(), "wb");
 
@@ -125,11 +100,7 @@ void Material_Export(Material* material)
 	{
 		fwritestr(fp, "baseMat mc/mtl_t6_wpn_smg_peacekeeper\n"); // Use peacekeeper as base material for now
 
-		Write_TextureMaps(material, fp, "colorMap");
-		Write_TextureMaps(material, fp, "normalMap");
-		Write_TextureMaps(material, fp, "specularMap");
-		Write_TextureMaps(material, fp, "detailMap");
-		Write_TextureMaps(material, fp, "colorTint");
+		Write_TextureMaps(material, fp);
 
 		fclose(fp);
 
@@ -213,7 +184,6 @@ void Write_XSurfaceArray(XSurface* surfs, char numsurfs)
 
 		if (!(surf->flags & 1) && surf->verts0)
 		{
-			GfxPackedVertex* destVerts0 = (GfxPackedVertex*)Buffer->At();
 			Buffer->Write(surf->verts0, sizeof(GfxPackedVertex), surf->vertCount);
 			destSurf->verts0 = (GfxPackedVertex *)-1;
 		}
@@ -471,6 +441,7 @@ void XModelExport(const char* name)
 		_mkdir("raw/xmodel");
 		std::string _name = "raw/xmodel/";
 		_name += name;
+		_name += ".rxme";
 
 		FILE* fp = fopen(_name.c_str(), "wb");
 
